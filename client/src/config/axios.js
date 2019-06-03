@@ -1,0 +1,1 @@
+export const SERVER_API_BASE = 'http://localhost:4001/v1';
