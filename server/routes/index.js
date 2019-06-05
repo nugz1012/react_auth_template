@@ -3,6 +3,7 @@ const passport = require('passport');
 const jwt = require('jsonwebtoken');
 
 require('../middleware/passport')(passport); 
+const validate = require('../middleware/validate');
 
 // CONFIG
 const { 
@@ -12,14 +13,12 @@ const {
     REFRESH_EXPIRATION 
 } = require('../config/jwt');
 
+// SERVICES
+const Token = require('../services/Token.service');
+
 const router = express.Router();
 
-const validate = require('../middleware/validate');
-
-router.use((req, res, next) => {
-    validate(req, res);
-    next();
-});
+router.use(validate);
 
 router.post('/login', (req, res) => {
     const access = jwt.sign({ sub: 1, aud: 'a@a.com' }, ACCESS_ENCRYPTION, {  expiresIn: ACCESS_EXPIRATION });
@@ -33,11 +32,23 @@ router.post('/logout', (req, res) => {
         res.status(200).send();
     }, 2000);
 });
-router.get('/token', passport.authenticate('jwt', { session: false }), (req, res) => {
-    res.status(200).json({ user: { id: 1, email: 'a@a.com' }});
+// router.get('/token', (req, res) => {
+//     // res.status(200).json({ user: { id: 1, email: 'a@a.com' }});
+// });
+router.get('/token', (req, res) => {
+    [err, tokens] = Token.refresh(req.signedCookies.jwt);  
+
+    if (err) {
+        res.status(401).json({ error: true, message: err });
+    }
+
+    const { access, refresh } = tokens;  
+
+    res.cookie('jwt', { access, refresh }, { signed: true, httpOnly: true, });
+    res.status(201).send({ token: access });
 });
 router.get('/secret', passport.authenticate('jwt', { session: false }), (req, res) => {
-    res.status(200).send();
+    res.status(200).json({ message: 'pwnt' });
     // setTimeout(() => {
     // }, 2000);
 });

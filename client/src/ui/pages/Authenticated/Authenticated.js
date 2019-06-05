@@ -10,13 +10,19 @@ class Authenticated extends Component {
         secretClickCount: 0
     }
 
-    handleSecretClick = () => {
-        axios.get('/secret')
-        .then(res => {
-            this.setState((state, props) => ({ secretClickCount: state.secretClickCount + 1 }));
-        })
-        .catch(err => {
-        });
+    handleSecretClick = async () => {
+        let i = 0;
+        while (i < 5) {
+            axios.get('/secret', { params: { test: 123 } })
+            .then((res) => {
+                console.log('File: Authenticated.js', 'Line: 18', res);
+                this.setState((state, props) => ({ secretClickCount: state.secretClickCount + 1 }));
+            }).catch((err) => {
+                // console.log('File: Authenticated.js', 'Line: 21', err.response)
+            });
+
+            i++
+        }
     }
 
     render() {
